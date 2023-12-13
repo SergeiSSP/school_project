@@ -1,0 +1,7 @@
+spring:
+    datasource:
+        password: hello
+        url: jdbc:postgresql://127.0.0.1:35545/school
+        username: postgres
+    flyway:
+        baseline-on-migrate: true
