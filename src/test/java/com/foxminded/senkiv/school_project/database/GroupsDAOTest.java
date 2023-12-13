@@ -4,7 +4,6 @@ import com.foxminded.senkiv.school_project.database.mapper.CourseRowMapper;
 import com.foxminded.senkiv.school_project.database.mapper.GroupRowMapper;
 import com.foxminded.senkiv.school_project.database.mapper.StudentRowMapper;
 import com.foxminded.senkiv.school_project.model.Group;
-import com.foxminded.senkiv.school_project.model.Student;
 import com.foxminded.senkiv.school_project.seeder.StudentGenerator;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +35,10 @@ class GroupsDAOTest {
 	StudentGenerator generator;
 	private  StudentsDAO studentsDAO;
 	private GroupsDAO groupsDAO;
-	private CoursesDAO coursesDAO;
-
 
 	@BeforeEach
 	void setUp(){
 		studentsDAO = new StudentsDAO(jdbcTemplate, studentRowMapper);
-		coursesDAO = new CoursesDAO(jdbcTemplate, courseRowMapper, studentRowMapper);
 		groupsDAO = new GroupsDAO(jdbcTemplate, groupRowMapper);
 	}
 
