@@ -42,3 +42,4 @@ replay_pid*
 .idea/sonarlint/**
 /HELP.md
 /.mvn/wrapper/maven-wrapper.properties
+/src/main/resources/env.properties

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @JdbcTest
 @AutoConfigureTestDatabase(replace=AutoConfigureTestDatabase.Replace.NONE)
-@Sql(scripts = {"classpath:start.sql", "classpath:populate.sql"},
+@Sql(scripts = {"classpath:initial_table_schema.sql", "classpath:insert_test_data.sql"},
     executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class StudentsDAOTest {

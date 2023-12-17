@@ -1,17 +1,15 @@
 package com.foxminded.senkiv.school_project.seeder;
 
 import com.foxminded.senkiv.school_project.database.*;
-import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.runtime.SchoolProjectRuntimeException;
 import com.foxminded.senkiv.school_project.model.Course;
 import com.foxminded.senkiv.school_project.model.Group;
 import com.foxminded.senkiv.school_project.model.Student;
 import com.foxminded.senkiv.school_project.utils.Logging;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -27,7 +25,6 @@ public class DBStarter {
 	private final StudentGenerator studentGenerator;
 	private final Random random = new Random();
 
-    @Autowired
     public DBStarter(CoursesDAO courseDAO, GroupsDAO groupsDAO, StudentsDAO studentDAO, StudentGenerator studentGenerator) {
         this.courseDAO = courseDAO;
         this.groupsDAO = groupsDAO;
@@ -48,27 +45,32 @@ public class DBStarter {
         }
     }
 
-
     private void generateCourses() {
-        Arrays.stream(Courses.values())
-                .forEach(course -> courseDAO.create(new Course(course.getName(), course.getDescription())));
+		List<Course> courses = new ArrayList<>();
+        for(Courses course:Courses.values()){
+			courses.add(new Course(course.getName(), course.getDescription()));
+		}
+		courseDAO.batchCreate(courses);
     }
 
 	private void generateGroups(){
+		List<Group> list = new ArrayList<>();
 		int numberOfGroups = 10;
 		for(int i = 0; i < numberOfGroups; i++){
 			StringBuilder sb = new StringBuilder();
 				sb.append(randomAlphabetic(2)).append("-").append(randomNumeric(2));
-				groupsDAO.create(new Group(sb.toString()));
+				list.add(new Group(sb.toString()));
 		}
+		groupsDAO.batchCreate(list);
 	}
 
 	private void generateStudents(){
+		List<Student> list = new ArrayList<>();
 		int numberOfStudent = 200;
 		for(int i = 0; i < numberOfStudent; i++){
-			Student student = studentGenerator.getStudent();
-			studentDAO.create(student);
+			list.add(studentGenerator.getStudent());
 		}
+		studentDAO.batchCreate(list);
 	}
 
 	private void addStudentsToGroups(){

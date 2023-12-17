@@ -1,14 +1,15 @@
 package com.foxminded.senkiv.school_project.database;
 
 import com.foxminded.senkiv.school_project.database.mapper.GroupRowMapper;
-import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.checked.GroupsTableUpdateException;
 import com.foxminded.senkiv.school_project.model.Group;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.PreparedStatement;
 import java.util.*;
 
 @Repository
@@ -16,7 +17,7 @@ public class GroupsDAO implements DAO<Group>{
 	private final JdbcTemplate jdbcTemplate;
 	private final GroupRowMapper rowMapper;
 
-	private static final String SELECT_BY_ID_STATEMENT = "SELECT * FROM groups WHERE group_id = ?;";
+	private static final String SELECT_BY_ID_STATEMENT = "SELECT * FROM groups WHERE group_id = ? LIMIT 1;";
 	private static final String SELECT_ALL_STATEMENT = "SELECT * FROM groups;";
 	private static final String INSERT_STATEMENT = "INSERT INTO groups(group_name) VALUES (?);";
 	private static final String UPDATE_STATEMENT = "UPDATE groups Set group_name = ? WHERE group_id = ?;";
@@ -30,7 +31,6 @@ public class GroupsDAO implements DAO<Group>{
 		HAVING COUNT(students.student_id) <= ?
 		ORDER BY quantity DESC ;""";
 
-	@Autowired
 	public GroupsDAO(JdbcTemplate jdbcTemplate, GroupRowMapper rowMapper) {
 		this.jdbcTemplate = jdbcTemplate;
         this.rowMapper = rowMapper;
@@ -42,7 +42,7 @@ public class GroupsDAO implements DAO<Group>{
 			var list = jdbcTemplate.query(SELECT_BY_ID_STATEMENT, rowMapper, id);
 			return Optional.ofNullable(list.get(0));
 		}catch(EmptyResultDataAccessException e){
-			throw new SchoolProjectRuntimeException(e);
+			return Optional.empty();
 		}
 	}
 
@@ -51,7 +51,7 @@ public class GroupsDAO implements DAO<Group>{
 		try {
 			return jdbcTemplate.query(SELECT_ALL_STATEMENT, rowMapper);
 		}catch(EmptyResultDataAccessException e){
-			throw new SchoolProjectRuntimeException(e);
+			return new ArrayList<>();
 		}
 	}
 
@@ -60,7 +60,7 @@ public class GroupsDAO implements DAO<Group>{
 		try {
 			jdbcTemplate.update(INSERT_STATEMENT, group.getName());
 		}catch(EmptyResultDataAccessException e){
-			throw new SchoolProjectRuntimeException(e);
+			throw new GroupsTableUpdateException(group, e);
 		}
 	}
 
@@ -69,7 +69,7 @@ public class GroupsDAO implements DAO<Group>{
 		try {
 			jdbcTemplate.update(UPDATE_STATEMENT, group.getName(), group.getId());
 		}catch(EmptyResultDataAccessException e){
-			throw new SchoolProjectRuntimeException(e);
+			throw new GroupsTableUpdateException(group, e);
 		}
 	}
 
@@ -78,7 +78,7 @@ public class GroupsDAO implements DAO<Group>{
 		try {
 			jdbcTemplate.update(DELETE_STATEMENT, id);
 		}catch(EmptyResultDataAccessException e){
-			throw new SchoolProjectRuntimeException(e);
+			throw new GroupsTableUpdateException(id, e);
 		}
 	}
 
@@ -95,7 +95,17 @@ public class GroupsDAO implements DAO<Group>{
 			list.forEach(entry -> result.put(entry.getKey(), entry.getValue()));
 			return result;
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			return new HashMap<>();
 		}
+	}
+
+	@Override
+	@Transactional
+	public void batchCreate(List<Group> list){
+		jdbcTemplate.batchUpdate(
+			INSERT_STATEMENT,
+			list,
+			50,
+			(PreparedStatement ps, Group group)-> ps.setString(1, group.getName()));
 	}
 }

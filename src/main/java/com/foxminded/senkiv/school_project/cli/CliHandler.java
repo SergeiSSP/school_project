@@ -7,9 +7,9 @@ import com.foxminded.senkiv.school_project.database.StudentsDAO;
 import com.foxminded.senkiv.school_project.model.Course;
 import com.foxminded.senkiv.school_project.model.Student;
 import com.foxminded.senkiv.school_project.validators.Validator;
+import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -26,29 +26,30 @@ public class CliHandler {
 	private final GroupsDAO groupsDAO;
 	private final StudentsDAO studentsDAO;
 	private final CoursesDAO coursesDAO;
-	private static final String CHOICES;
+	private String choices;
 	private static final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 	private static final Logger logger = LogManager.getLogger(CliHandler.class);
 	private static final String OUTPUT_ENTRY = "%n%d. %s";
 
-	@Autowired
 	public CliHandler(GroupsDAO groupsDAO, StudentsDAO studentsDAO, CoursesDAO coursesDAO) {
 		this.groupsDAO = groupsDAO;
 		this.studentsDAO = studentsDAO;
 		this.coursesDAO = coursesDAO;
 	}
 
-	static {
+	@PostConstruct
+	private void postConstruct(){
 		StringBuilder sb = new StringBuilder();
 		for(Choices value: Choices.values()){
 			sb.append(String.format(OUTPUT_ENTRY, value.getNumber(), value.getAction()));
 		}
-		CHOICES = sb.append("\nChoose action to perform and press <Enter>").toString();
+		choices = sb.append("\nChoose action to perform and press <Enter>").toString();
 	}
+
 
 	public void cliApplication() throws IOException {
 		while (true) {
-			logger.info(CHOICES);
+			logger.info(choices);
 			int validatedChoice = receiveChoice();
 			if(validatedChoice == 0){
 				break;

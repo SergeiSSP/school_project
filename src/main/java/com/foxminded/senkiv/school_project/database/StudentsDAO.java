@@ -1,14 +1,18 @@
 package com.foxminded.senkiv.school_project.database;
 
 import com.foxminded.senkiv.school_project.database.mapper.StudentRowMapper;
-import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.checked.StudentsTableUpdateException;
+import com.foxminded.senkiv.school_project.exceptions.checked.StudentsCoursesTableUpdateException;
+import com.foxminded.senkiv.school_project.exceptions.runtime.SchoolProjectRuntimeException;
 import com.foxminded.senkiv.school_project.model.Student;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 
+import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +21,7 @@ import java.util.Optional;
 public class StudentsDAO implements DAO<Student> {
 	private final JdbcTemplate jdbcTemplate;
 	private final StudentRowMapper rowMapper;
-	private static final String SELECT_BY_ID_STATEMENT = "SELECT * FROM students WHERE student_id = ?;";
+	private static final String SELECT_BY_ID_STATEMENT = "SELECT * FROM students WHERE student_id = ? LIMIT 1;";
 	private static final String SELECT_ALL_STATEMENT = "SELECT * FROM students;";
 	private static final String INSERT_STATEMENT = "INSERT INTO students (first_name, last_name) VALUES (?, ?);";
 	private static final String UPDATE_STATEMENT = "UPDATE students SET  first_name = ?, last_name = ? WHERE student_id = ?;";
@@ -26,7 +30,6 @@ public class StudentsDAO implements DAO<Student> {
 	private static final String ASSIGN_STUDENT_COURSE = "INSERT INTO students_courses (student_id, course_id) VALUES (?, ?);";
 	private static final String DELETE_STUDENT_FROM_COURSE = "DELETE FROM students_courses WHERE student_id = ? AND course_id = ?;";
 
-	@Autowired
 	public StudentsDAO(JdbcTemplate jdbcTemplate, StudentRowMapper rowMapper) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.rowMapper = rowMapper;
@@ -38,7 +41,7 @@ public class StudentsDAO implements DAO<Student> {
 			var list = jdbcTemplate.query(SELECT_BY_ID_STATEMENT, rowMapper, id);
 			return Optional.ofNullable(list.get(0));
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			return Optional.empty();
 		}
 	}
 
@@ -47,7 +50,7 @@ public class StudentsDAO implements DAO<Student> {
 		try {
 			return jdbcTemplate.query(SELECT_ALL_STATEMENT, rowMapper);
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e.getCause());
+			return new ArrayList<>();
 		}
 	}
 
@@ -56,7 +59,7 @@ public class StudentsDAO implements DAO<Student> {
 		try {
 			jdbcTemplate.update(INSERT_STATEMENT, student.getFirstName(), student.getLastName());
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			throw new StudentsTableUpdateException(student, e);
 		}
 	}
 
@@ -65,7 +68,7 @@ public class StudentsDAO implements DAO<Student> {
 		try {
 			jdbcTemplate.update(UPDATE_STATEMENT, student.getFirstName(), student.getLastName(), student.getId());
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			throw new StudentsTableUpdateException(student, e);
 		}
 	}
 
@@ -74,7 +77,7 @@ public class StudentsDAO implements DAO<Student> {
 		try {
 			jdbcTemplate.update(DELETE_STATEMENT, id);
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			throw new StudentsTableUpdateException(id, e);
 		}
 	}
 
@@ -82,7 +85,7 @@ public class StudentsDAO implements DAO<Student> {
 		try {
 			jdbcTemplate.update(ASSIGN_STUDENT_GROUP, groupId, studentId);
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			throw new StudentsTableUpdateException(studentId, e);
 		}
 	}
 
@@ -99,8 +102,21 @@ public class StudentsDAO implements DAO<Student> {
 		try {
 			jdbcTemplate.update(DELETE_STUDENT_FROM_COURSE, studentId, courseId);
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			throw new StudentsCoursesTableUpdateException(studentId, courseId, e);
 		}
+	}
+
+	@Override
+	@Transactional
+	public void batchCreate(List<Student> list){
+		jdbcTemplate.batchUpdate(
+			INSERT_STATEMENT,
+			list,
+			50,
+			(PreparedStatement ps, Student student)-> {
+				ps.setString(1, student.getFirstName());
+				ps.setString(2, student.getLastName());
+			});
 	}
 }
 

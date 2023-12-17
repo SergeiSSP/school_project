@@ -2,14 +2,18 @@ package com.foxminded.senkiv.school_project.database;
 
 import com.foxminded.senkiv.school_project.database.mapper.CourseRowMapper;
 import com.foxminded.senkiv.school_project.database.mapper.StudentRowMapper;
-import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.checked.CoursesTableUpdateException;
+import com.foxminded.senkiv.school_project.exceptions.runtime.SchoolProjectRuntimeException;
 import com.foxminded.senkiv.school_project.model.Course;
 import com.foxminded.senkiv.school_project.model.Student;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.foxminded.senkiv.school_project.utils.Logging;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.PreparedStatement;
 import java.util.*;
 
 
@@ -18,7 +22,7 @@ public class CoursesDAO implements DAO<Course> {
 	private final JdbcTemplate jdbcTemplate;
 	private final CourseRowMapper courseRowMapper;
 	private final StudentRowMapper studentRowMapper;
-	private static final String SELECT_BY_ID_STATEMENT = "SELECT * FROM courses WHERE course_id = ?;";
+	private static final String SELECT_BY_ID_STATEMENT = "SELECT * FROM courses WHERE course_id = ? LIMIT 1;";
 	private static final String SELECT_ALL_STATEMENT ="SELECT * FROM courses;";
 	private static final String INSERT_STATEMENT = "INSERT INTO courses (course_name, course_description) VALUES (?, ?);";
 	private static final String UPDATE_STATEMENT = "UPDATE courses SET course_name = ?, course_description = ? WHERE course_id = ?;";
@@ -35,7 +39,6 @@ public class CoursesDAO implements DAO<Course> {
 		JOIN courses ON students_courses.course_id = courses.course_id
 		WHERE students_courses.student_id = ?""";
 
-	@Autowired
 	public CoursesDAO(JdbcTemplate jdbcTemplate, CourseRowMapper courseRowMapper, StudentRowMapper studentRowMapper){
         this.jdbcTemplate = jdbcTemplate;
         this.courseRowMapper = courseRowMapper;
@@ -49,7 +52,8 @@ public class CoursesDAO implements DAO<Course> {
 			var list = jdbcTemplate.query(SELECT_BY_ID_STATEMENT, courseRowMapper, id);
 			return Optional.ofNullable(list.get(0));
         } catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			Logging.logger.info("No student with such id.");
+			return Optional.empty();
         }
     }
 
@@ -58,7 +62,7 @@ public class CoursesDAO implements DAO<Course> {
         try{
 			return jdbcTemplate.query(SELECT_ALL_STATEMENT, courseRowMapper);
         } catch (EmptyResultDataAccessException e) {
-            throw new SchoolProjectRuntimeException(e);
+            return new ArrayList<>();
         }
     }
 
@@ -75,12 +79,12 @@ public class CoursesDAO implements DAO<Course> {
     @Override
     public void update(Course course) {
 		if(get(course.getId()).isEmpty()) {
-			throw new SchoolProjectRuntimeException("No student with such id");
+			throw new CoursesTableUpdateException("No student with such id");
 		}
 		try {
 			jdbcTemplate.update(UPDATE_STATEMENT, course.getName(), course.getDescription(), course.getId());
-		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+		} catch (DataAccessException e) {
+			throw new CoursesTableUpdateException(course, e);
 		}
     }
 
@@ -89,7 +93,7 @@ public class CoursesDAO implements DAO<Course> {
         try {
 			jdbcTemplate.update(DELETE_STATEMENT, id);
         } catch (EmptyResultDataAccessException e) {
-            throw new SchoolProjectRuntimeException(e);
+            throw new CoursesTableUpdateException(id, e);
         }
     }
 
@@ -97,7 +101,7 @@ public class CoursesDAO implements DAO<Course> {
 		try {
 			return jdbcTemplate.query(FILTER_STUDENTS_BY_COURSE, studentRowMapper, courseId);
 		}catch(EmptyResultDataAccessException e){
-			throw new SchoolProjectRuntimeException(e);
+			return new ArrayList<>();
 		}
 	}
 
@@ -105,7 +109,21 @@ public class CoursesDAO implements DAO<Course> {
 		try {
 			return jdbcTemplate.query(GET_COURSES, courseRowMapper, studentId);
 		} catch (EmptyResultDataAccessException e) {
-			throw new SchoolProjectRuntimeException(e);
+			return new ArrayList<>();
 		}
+	}
+
+	@Override
+	@Transactional
+	public void batchCreate(List<Course> list){
+		jdbcTemplate.batchUpdate(
+			INSERT_STATEMENT,
+			list,
+			50,
+			(PreparedStatement ps, Course course)->{
+				ps.setString(1, course.getName());
+				ps.setString(2, course.getDescription());
+			}
+			);
 	}
 }
