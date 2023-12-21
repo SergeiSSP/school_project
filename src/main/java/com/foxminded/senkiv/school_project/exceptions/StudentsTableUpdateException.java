@@ -1,4 +1,4 @@
-package com.foxminded.senkiv.school_project.exceptions.checked;
+package com.foxminded.senkiv.school_project.exceptions;
 
 import com.foxminded.senkiv.school_project.model.Student;
 import org.springframework.dao.DataAccessException;

@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS students, courses, groups, students_courses;
+
 CREATE TABLE groups
 (
     group_id SERIAL PRIMARY KEY,

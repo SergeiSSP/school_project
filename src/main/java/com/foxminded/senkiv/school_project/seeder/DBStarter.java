@@ -1,7 +1,7 @@
 package com.foxminded.senkiv.school_project.seeder;
 
 import com.foxminded.senkiv.school_project.database.*;
-import com.foxminded.senkiv.school_project.exceptions.runtime.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
 import com.foxminded.senkiv.school_project.model.Course;
 import com.foxminded.senkiv.school_project.model.Group;
 import com.foxminded.senkiv.school_project.model.Student;

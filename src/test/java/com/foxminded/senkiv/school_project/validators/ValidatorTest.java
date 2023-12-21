@@ -1,6 +1,6 @@
 package com.foxminded.senkiv.school_project.validators;
 
-import com.foxminded.senkiv.school_project.exceptions.runtime.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;

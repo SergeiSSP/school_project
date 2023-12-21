@@ -1,6 +1,7 @@
 package com.foxminded.senkiv.school_project;
 
 import com.foxminded.senkiv.school_project.cli.CliHandler;
+import com.foxminded.senkiv.school_project.seeder.DBStarter;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 

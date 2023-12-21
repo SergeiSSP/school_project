@@ -1,11 +1,10 @@
 package com.foxminded.senkiv.school_project.cli;
 
-
-import com.foxminded.senkiv.school_project.database.CoursesDAO;
-import com.foxminded.senkiv.school_project.database.GroupsDAO;
-import com.foxminded.senkiv.school_project.database.StudentsDAO;
 import com.foxminded.senkiv.school_project.model.Course;
 import com.foxminded.senkiv.school_project.model.Student;
+import com.foxminded.senkiv.school_project.service.CourseService;
+import com.foxminded.senkiv.school_project.service.GroupService;
+import com.foxminded.senkiv.school_project.service.StudentService;
 import com.foxminded.senkiv.school_project.validators.Validator;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
@@ -23,18 +22,18 @@ import static com.foxminded.senkiv.school_project.validators.Validator.validateI
 
 @Component
 public class CliHandler {
-	private final GroupsDAO groupsDAO;
-	private final StudentsDAO studentsDAO;
-	private final CoursesDAO coursesDAO;
+	private final GroupService groupsService;
+	private final StudentService studentService;
+	private final CourseService coursesService;
 	private String choices;
 	private static final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 	private static final Logger logger = LogManager.getLogger(CliHandler.class);
 	private static final String OUTPUT_ENTRY = "%n%d. %s";
 
-	public CliHandler(GroupsDAO groupsDAO, StudentsDAO studentsDAO, CoursesDAO coursesDAO) {
-		this.groupsDAO = groupsDAO;
-		this.studentsDAO = studentsDAO;
-		this.coursesDAO = coursesDAO;
+	public CliHandler(GroupService groupsService, StudentService studentService, CourseService courseService) {
+		this.groupsService= groupsService;
+		this.studentService = studentService;
+		this.coursesService = courseService;
 	}
 
 	@PostConstruct
@@ -69,14 +68,14 @@ public class CliHandler {
 		logger.info("Enter required amount of students.");
 		StringBuilder sb = new StringBuilder();
 		int quantity = Integer.parseInt(br.readLine());
-		groupsDAO.filterQuantity(quantity)
+		groupsService.filterByStudentQuantity(quantity)
                 .forEach((key, value) -> sb.append(String.format("%n%s contains %d students", key, value)));
 		logger.info(sb);
 	}
 
 	private void filterStudentsByCourse() throws IOException{
 		StringBuilder sb = new StringBuilder();
-		List<Course> list = coursesDAO.getAll();
+		List<Course> list = coursesService.getAll();
 		list.forEach(course -> sb.append(String.format(OUTPUT_ENTRY, course.getId(), course.getName())));
 		logger.info(sb);
 		logger.info("Enter id of required course to find all related students");
@@ -89,7 +88,7 @@ public class CliHandler {
 				logger.info("Try once more.");
 			}
 		}
-		List<Student> studentsOnCourse = coursesDAO.getStudents(courseId);
+		List<Student> studentsOnCourse = coursesService.getStudents(courseId);
 		sb.setLength(0);
 		studentsOnCourse.forEach(student ->
 				sb.append(String.format("%n%d. %s %s", student.getId(), student.getFirstName(), student.getLastName())));
@@ -99,18 +98,18 @@ public class CliHandler {
     private void createStudent() throws IOException {
         String firstName = getValidatedInput(br,"Enter first name", Validator::validateInput);
         String lastName = getValidatedInput(br, "Enter last name", Validator::validateInput);
-        studentsDAO.create(new Student(firstName, lastName));
+        studentService.create(new Student(firstName, lastName));
     }
 
 
 	 private void deleteStudent()throws IOException{
-		List<Student> all = studentsDAO.getAll();
+		List<Student> all = studentService.getAll();
 		 logger.info("Enter id of student that you want to delete");
 		 int id;
 		 while(true){
 			  id = Integer.parseInt(br.readLine());
 			  if(id > 0 && id <= all.size()){
-				  studentsDAO.delete(id);
+				  studentService.delete(id);
 				  break;
 			  } else {
 				  logger.info("Enter valid id");
@@ -119,7 +118,7 @@ public class CliHandler {
 	 }
 
 	 private void addStudentToCourse()throws IOException {
-		 List<Course> list = coursesDAO.getAll();
+		 List<Course> list = coursesService.getAll();
 		 StringBuilder sb = new StringBuilder();
 		 list.forEach(course -> sb.append(String.format(OUTPUT_ENTRY, course.getId(), course.getName())));
 		 logger.info(sb);
@@ -127,10 +126,10 @@ public class CliHandler {
 		 int courseId = Integer.parseInt(br.readLine());
 		 logger.info("Enter your student id");
 		 int studentId = Integer.parseInt(br.readLine());
-		 if (coursesDAO.getStudents(courseId).stream().anyMatch(student -> student.getId() == studentId)) {
+		 if (coursesService.getStudents(courseId).stream().anyMatch(student -> student.getId() == studentId)) {
 			 logger.info("This student is already assigned to this course.");
 		 } else {
-			 studentsDAO.addCourse(studentId, courseId);
+			 studentService.addCourse(studentId, courseId);
 		 }
 	 }
 
@@ -140,11 +139,11 @@ public class CliHandler {
 		int studentId;
 		while(true) {
 			studentId = Integer.parseInt(br.readLine());
-			if(studentsDAO.get(studentId).isPresent()){
+			if(studentService.get(studentId).isPresent()){
 				break;
 			}
 		}
-		List<Course> list = coursesDAO.getCoursesForStudent(studentId);
+		List<Course> list = coursesService.getStudentCourses(studentId);
 		list.forEach(course ->
 				sb.append(String.format(OUTPUT_ENTRY, course.getId(), course.getName()))
 			);
@@ -156,7 +155,7 @@ public class CliHandler {
 				.filter( course -> course.getId() == number)
 				.findAny();
 			if(toDelete.isPresent()){
-				studentsDAO.deleteCourse(studentId, number);
+				studentService.deleteCourse(studentId, number);
 				break;
 			} else {
 				logger.info("Try again.");

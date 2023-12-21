@@ -2,8 +2,8 @@ package com.foxminded.senkiv.school_project.database;
 
 import com.foxminded.senkiv.school_project.database.mapper.CourseRowMapper;
 import com.foxminded.senkiv.school_project.database.mapper.StudentRowMapper;
-import com.foxminded.senkiv.school_project.exceptions.checked.CoursesTableUpdateException;
-import com.foxminded.senkiv.school_project.exceptions.runtime.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.CoursesTableUpdateException;
+import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
 import com.foxminded.senkiv.school_project.model.Course;
 import com.foxminded.senkiv.school_project.model.Student;
 import com.foxminded.senkiv.school_project.utils.Logging;

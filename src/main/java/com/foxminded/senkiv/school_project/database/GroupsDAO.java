@@ -1,7 +1,7 @@
 package com.foxminded.senkiv.school_project.database;
 
 import com.foxminded.senkiv.school_project.database.mapper.GroupRowMapper;
-import com.foxminded.senkiv.school_project.exceptions.checked.GroupsTableUpdateException;
+import com.foxminded.senkiv.school_project.exceptions.GroupsTableUpdateException;
 import com.foxminded.senkiv.school_project.model.Group;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;

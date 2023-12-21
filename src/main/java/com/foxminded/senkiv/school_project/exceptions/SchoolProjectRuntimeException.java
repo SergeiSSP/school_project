@@ -1,4 +1,4 @@
-package com.foxminded.senkiv.school_project.exceptions.runtime;
+package com.foxminded.senkiv.school_project.exceptions;
 
 public class SchoolProjectRuntimeException extends RuntimeException {
     public SchoolProjectRuntimeException(Throwable cause) {

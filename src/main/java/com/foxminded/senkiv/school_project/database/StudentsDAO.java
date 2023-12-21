@@ -1,9 +1,9 @@
 package com.foxminded.senkiv.school_project.database;
 
 import com.foxminded.senkiv.school_project.database.mapper.StudentRowMapper;
-import com.foxminded.senkiv.school_project.exceptions.checked.StudentsTableUpdateException;
-import com.foxminded.senkiv.school_project.exceptions.checked.StudentsCoursesTableUpdateException;
-import com.foxminded.senkiv.school_project.exceptions.runtime.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.StudentsTableUpdateException;
+import com.foxminded.senkiv.school_project.exceptions.StudentsCoursesTableUpdateException;
+import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
 import com.foxminded.senkiv.school_project.model.Student;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;

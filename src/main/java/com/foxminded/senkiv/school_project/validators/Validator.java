@@ -1,6 +1,6 @@
 package com.foxminded.senkiv.school_project.validators;
 
-import com.foxminded.senkiv.school_project.exceptions.runtime.SchoolProjectRuntimeException;
+import com.foxminded.senkiv.school_project.exceptions.SchoolProjectRuntimeException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
